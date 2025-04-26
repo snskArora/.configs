@@ -106,6 +106,7 @@ source $ZSH/oh-my-zsh.sh
 export PATH="$PATH:$HOME/.cargo/bin"
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 export PATH="$PATH:/home/sunny/.local/bin"
+export PATH="$PATH:/usr/local/go/bin"
 
 alias gotowin="cd /media/sunny/Windows/Users/saror" 
 
@@ -173,3 +174,7 @@ function gc() {
     
     git commit -m "$commit_msg"
 }
+
+if [ -z "$(ls -A /media/sunny/Windows)" ]; then
+    sudo mount /dev/nvme0n1p3 /media/sunny/Windows
+fi
