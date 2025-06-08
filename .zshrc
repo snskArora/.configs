@@ -175,6 +175,49 @@ function gc() {
     git commit -m "$commit_msg"
 }
 
-if [ -z "$(ls -A /media/sunny/Windows)" ]; then
-    sudo mount /dev/nvme0n1p3 /media/sunny/Windows
+if [ -z "$(ls -A /media/sunny/int_drive/)" ]; then
+    sudo mount --mkdir /dev/nvme0n1p3 /media/sunny/int_drive
 fi
+
+tmac() {
+    local session="${1:-default}"
+    tmux has-session -t "$session" 2>/dev/null || tmux new-session -d -s "$session"
+    tmux attach -t "$session"
+}
+_tmac_complete() {
+    local word=${COMP_WORDS[COMP_CWORD]}
+    local sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null)
+    COMPREPLY=( $(compgen -W "$sessions" -- "$word") )
+}
+complete -F _tmac_complete tmac
+
+tmux_pick_session() {
+  if [ -n "$TMUX" ]; then
+    return
+  fi
+  local sessions new_session session
+  sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null)
+  if [[ -z "$sessions" ]]; then
+    read "new_session?Enter new session name: "
+    clear
+    tmux new-session -s "${new_session:-default}"
+    clear
+    return
+  fi
+  session=$(echo -e "$sessions\nNew Session" | fzf --reverse --height 40% --prompt="Select tmux session: ")
+  if [[ "$session" == "New Session" ]]; then
+    read "new_session?Enter new session name: "
+    clear
+    tmux new-session -s "${new_session}"
+    clear
+  elif [[ -n "$session" ]]; then
+    clear
+    tmux attach -t "$session"
+    clear
+  else
+    echo "Did not get any session input, exiting...."
+  fi
+}
+
+tmux_pick_session
+
